@@ -1,5 +1,7 @@
 using UnityEngine;
 
+// INHERITANCE + POLYMORPHISM
+// FlagZombie mewarisi Enemy, lalu meng-override Serang().
 public class FlagZombie : Enemy
 {
     public bool flag = true;
@@ -7,5 +9,6 @@ public class FlagZombie : Enemy
     public override void Serang()
     {
         Debug.Log("FlagZombie Gigit");
+        base.Serang();   // beri damage ke player
     }
 }

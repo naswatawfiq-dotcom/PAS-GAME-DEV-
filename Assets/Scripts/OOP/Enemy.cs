@@ -1,9 +1,9 @@
 using UnityEngine;
 using System;
 
-public class Enemy : MonoBehaviour
+public class Enemy : MonoBehaviour, IDamageable
 {
-    // DEKLARASI EVENT ZOMBIE MATI (Harus ada agar GameManager tidak Error CS0117)
+    // Event zombie mati (didengar GameManager)
     public static event Action<Enemy> OnZombieMati;
 
     [SerializeField] private int hp = 100;
@@ -16,6 +16,9 @@ public class Enemy : MonoBehaviour
     [SerializeField] private float JarakSerang = 1.5f;
     [SerializeField] private float JedaSerang = 1f;
 
+    [Header("Serangan")]
+    [SerializeField] protected int damageSerang = 10;
+
     private StateZombie state = StateZombie.IDLE;
     private StateZombie stateSebelumnya = StateZombie.IDLE;
     private float waktuSerangTerakhir;
@@ -26,6 +29,10 @@ public class Enemy : MonoBehaviour
         if (playerObj != null)
         {
             player = playerObj.transform;
+        }
+        else
+        {
+            Debug.LogWarning("Player dengan tag 'Player' tidak ditemukan, zombie tidak akan mengejar.", this);
         }
     }
 
@@ -52,13 +59,13 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    // FUNGSI UNTUK MENERIMA DAMAGE DARI PLAYER
-    public void TakeDamage(int damageAmount)
+    // Implementasi IDamageable (sama seperti PlayerHealth)
+    public void KenaDamage(int jumlah)
     {
         if (state == StateZombie.DEAD) return;
 
-        hp -= damageAmount;
-        Debug.Log(gameObject.name + " kena damage: " + damageAmount + " | Sisa HP: " + hp);
+        hp -= jumlah;
+        Debug.Log(gameObject.name + " kena damage: " + jumlah + " | Sisa HP: " + hp);
 
         if (hp <= 0)
         {
@@ -66,13 +73,17 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    // FUNGSI PEMANGGIL EVENT SAAT ZOMBIE MATI
+    // Dipertahankan supaya kode lama (GameManager) tetap jalan
+    public void TakeDamage(int damageAmount)
+    {
+        KenaDamage(damageAmount);
+    }
+
     private void Mati()
     {
         state = StateZombie.DEAD;
         Debug.Log(gameObject.name + " telah mati!");
 
-        // Mengirimkan sinyal ke GameManager
         OnZombieMati?.Invoke(this);
 
         Destroy(gameObject);
@@ -107,16 +118,16 @@ public class Enemy : MonoBehaviour
         switch (stateBaru)
         {
             case StateZombie.IDLE:
-                Debug.Log("Enemy sedang IDLE");
+                Debug.Log(name + " sedang IDLE");
                 break;
             case StateZombie.PATROL:
-                Debug.Log("Enemy sedang PATROL");
+                Debug.Log(name + " sedang PATROL");
                 break;
             case StateZombie.CHASE:
-                Debug.Log("Enemy sedang CHASE");
+                Debug.Log(name + " sedang CHASE");
                 break;
             case StateZombie.ATTACK:
-                Debug.Log("Enemy sedang ATTACK");
+                Debug.Log(name + " sedang ATTACK");
                 break;
         }
     }
@@ -132,9 +143,16 @@ public class Enemy : MonoBehaviour
         );
     }
 
+    // Serangan dasar: kasih damage ke player. Zombie turunan bisa override,
+    // lalu panggil base.Serang() supaya damage tetap diberikan.
     public virtual void Serang()
     {
-        Debug.Log("Enemy Serang");
+        Debug.Log(name + " menyerang");
+
+        if (player == null) return;
+
+        IDamageable target = player.GetComponentInParent<IDamageable>();
+        if (target != null) target.KenaDamage(damageSerang);
     }
 
     void PerilakuAttack()
@@ -144,5 +162,13 @@ public class Enemy : MonoBehaviour
             Serang();
             waktuSerangTerakhir = Time.time;
         }
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, JarakDeteksi);
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, JarakSerang);
     }
 }

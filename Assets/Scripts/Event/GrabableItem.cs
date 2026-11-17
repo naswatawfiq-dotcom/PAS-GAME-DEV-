@@ -1,16 +1,6 @@
-using UnityEngine;
-
-public class NewMonoBehaviourScript : MonoBehaviour
+public interface GrabableItem
 {
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    // Mengembalikan true kalau item berhasil masuk seluruhnya.
+    // Kalau false (misal inventory penuh), item di dunia tidak boleh dihapus.
+    bool AddItem(ItemDetails itemDetails);
 }
