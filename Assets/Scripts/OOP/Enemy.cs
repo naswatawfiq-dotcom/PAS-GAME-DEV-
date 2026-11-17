@@ -14,14 +14,12 @@ public class Enemy : MonoBehaviour, IDamageable
     [Header("State Machine")]
     [SerializeField] private float JarakDeteksi = 6f;
     [SerializeField] private float JarakSerang = 1.5f;
-    [SerializeField] private float JedaSerang = 1f;
 
     [Header("Serangan")]
     [SerializeField] protected int damageSerang = 10;
 
     private StateZombie state = StateZombie.IDLE;
     private StateZombie stateSebelumnya = StateZombie.IDLE;
-    private float waktuSerangTerakhir;
 
     protected virtual void Start()
     {
@@ -143,25 +141,26 @@ public class Enemy : MonoBehaviour, IDamageable
         );
     }
 
-    // Serangan dasar: kasih damage ke player. Zombie turunan bisa override,
-    // lalu panggil base.Serang() supaya damage tetap diberikan.
+    // Serangan dasar: kasih damage ke player, lalu zombie menghilang (sekali pukul).
+    // Zombie turunan bisa override, lalu panggil base.Serang() supaya damage tetap diberikan.
     public virtual void Serang()
     {
+        if (state == StateZombie.DEAD) return;   // jangan menyerang dua kali
+
         Debug.Log(name + " menyerang");
 
-        if (player == null) return;
+        if (player != null)
+        {
+            IDamageable target = player.GetComponentInParent<IDamageable>();
+            if (target != null) target.KenaDamage(damageSerang);
+        }
 
-        IDamageable target = player.GetComponentInParent<IDamageable>();
-        if (target != null) target.KenaDamage(damageSerang);
+        Mati();   // menghilang setelah memukul
     }
 
     void PerilakuAttack()
     {
-        if (Time.time >= waktuSerangTerakhir + JedaSerang)
-        {
-            Serang();
-            waktuSerangTerakhir = Time.time;
-        }
+        Serang();
     }
 
     void OnDrawGizmosSelected()

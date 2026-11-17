@@ -3,12 +3,6 @@ using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour
 {
-    // Harus sama dengan Threshold di Blend Tree Move dan Idle (kalau pakai Animator)
-    private const float BlendDown = 0f;
-    private const float BlendLeft = 1f / 3f;
-    private const float BlendRight = 2f / 3f;
-    private const float BlendUp = 1f;
-
     public float kecepatan = 5f;
     public int skor = 0;
 
@@ -16,6 +10,15 @@ public class PlayerMovement : MonoBehaviour
     private Animator anim;
     private Vector2 arahGerak;
     private GameManager gameManager;
+
+    // Arah hadap terakhir. Dipakai Blend Tree Idle/Walk (parameter MoveX dan MoveY).
+    // Selalu salah satu dari (1,0) (-1,0) (0,1) (0,-1), tidak pernah (0,0),
+    // karena (0,0) membuat Blend Tree mencampur SEMUA animasi sekaligus (sprite jadi gepeng).
+    private Vector2 arahHadap = Vector2.down;
+
+    private static readonly int MoveX = Animator.StringToHash("MoveX");
+    private static readonly int MoveY = Animator.StringToHash("MoveY");
+    private static readonly int IsWalking = Animator.StringToHash("IsWalking");
 
     void Start()
     {
@@ -28,6 +31,8 @@ public class PlayerMovement : MonoBehaviour
 
         anim = GetComponentInChildren<Animator>();
         gameManager = FindFirstObjectByType<GameManager>();
+
+        UpdateAnimasi();   // mulai dengan menghadap bawah
     }
 
     void OnMove(InputValue value)
@@ -55,17 +60,19 @@ public class PlayerMovement : MonoBehaviour
         if (anim == null || anim.runtimeAnimatorController == null) return;
 
         bool berjalan = arahGerak.sqrMagnitude > 0.01f;
-        anim.SetBool("IsWalking", berjalan);
 
-        if (!berjalan) return;
+        // Ambil arah dominan (4 arah). Saat berhenti, arah hadap terakhir dipertahankan.
+        if (berjalan)
+        {
+            if (Mathf.Abs(arahGerak.x) > Mathf.Abs(arahGerak.y))
+                arahHadap = arahGerak.x > 0 ? Vector2.right : Vector2.left;
+            else
+                arahHadap = arahGerak.y > 0 ? Vector2.up : Vector2.down;
+        }
 
-        float blend;
-        if (Mathf.Abs(arahGerak.x) > Mathf.Abs(arahGerak.y))
-            blend = arahGerak.x > 0 ? BlendRight : BlendLeft;
-        else
-            blend = arahGerak.y > 0 ? BlendUp : BlendDown;
-
-        anim.SetFloat("Blend", blend);
+        anim.SetBool(IsWalking, berjalan);
+        anim.SetFloat(MoveX, arahHadap.x);
+        anim.SetFloat(MoveY, arahHadap.y);
     }
 
     void OnTriggerEnter2D(Collider2D other)
