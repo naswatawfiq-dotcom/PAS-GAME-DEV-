@@ -7,11 +7,9 @@ public class GameManager : MonoBehaviour
 
     [Header("UI (opsional, kalau kosong pakai teks OnGUI)")]
     [SerializeField] private TMP_Text coinsText;
-    [SerializeField] private TMP_Text zombieText;
     [SerializeField] private GameObject winPanel;
 
     private int koinTerkumpul = 0;
-    private int jumlahZombieMati = 0;
     private bool sudahMenang = false;
 
     void Awake()
@@ -22,23 +20,6 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         if (winPanel != null) winPanel.SetActive(false);
-        UpdateTeks();
-    }
-
-    void OnEnable()
-    {
-        Enemy.OnZombieMati += SaatZombieMati;
-    }
-
-    void OnDisable()
-    {
-        Enemy.OnZombieMati -= SaatZombieMati;
-    }
-
-    void SaatZombieMati(Enemy zombie)
-    {
-        jumlahZombieMati++;
-        Debug.Log("GameManager dengar event. Zombie mati: " + jumlahZombieMati + " (" + zombie.name + ")");
         UpdateTeks();
     }
 
@@ -58,9 +39,6 @@ public class GameManager : MonoBehaviour
     {
         if (coinsText != null)
             coinsText.text = sudahMenang ? "Kamu menang!" : "Koin: " + koinTerkumpul + " / " + totalKoin;
-
-        if (zombieText != null)
-            zombieText.text = "Zombie mati: " + jumlahZombieMati;
     }
 
     void Menang()
@@ -90,6 +68,5 @@ public class GameManager : MonoBehaviour
 
         GUI.skin.label.fontSize = 22;
         GUI.Label(new Rect(16, 16, 480, 36), "Koin: " + koinTerkumpul + " / " + totalKoin);
-        GUI.Label(new Rect(16, 52, 480, 36), "Zombie mati: " + jumlahZombieMati);
     }
 }

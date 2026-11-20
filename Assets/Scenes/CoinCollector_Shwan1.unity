@@ -1192,7 +1192,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   totalKoin: 0
   coinsText: {fileID: 0}
-  zombieText: {fileID: 0}
   winPanel: {fileID: 0}
 --- !u!4 &619685818
 Transform:
